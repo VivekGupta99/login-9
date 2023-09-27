@@ -35,17 +35,20 @@
         <button type="submit" class="btn btn-primary" id="submit">Submit</button>
     </form>
 
+    <div id="data">
+    </div>
 
     <script>
         const submit = document.getElementById('submit');
         const name = document.getElementById("name");
-        const email= document.getElementById("email");
-        const password= document.getElementById("password");
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const divData = document.getElementById('data')
 
         submit.addEventListener("click", (event) => {
             event.preventDefault();
             console.log("Button Clicked");
-            
+
             const n = name.value;
             const e = email.value;
             const p = password.value;
@@ -62,6 +65,7 @@
                     console.log(res.data);
                 })
                 .catch((error) => {
+                    divData.innerHTML += `<h4>All fields are required</h4>`
                     console.log("POST error:", error);
                 });
         })
