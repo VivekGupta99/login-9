@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FORM</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+        integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <style>
+        body {
+            background-color: rgb(145, 164, 179);
+            margin: 0%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            border-radius: 5px;
+            width: 40vw;
+            background-color: white;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        form>h1 {
+            color: rgba(0, 0, 0, 0.644);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.644);
+            width: 10vw;
+            text-align: center;
+            padding-bottom: 1vmax;
+            font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+        }
+
+        form>input {
+            padding: 1vmax;
+            width: 30vw;
+            outline: none;
+            font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS",
+                sans-serif;
+            font-size: 1.3vmax;
+            border: none;
+            border-bottom: 1px solid rgba(70, 70, 70, 0.5);
+        }
+
+        form>input[type="submit"] {
+            width: 20vw;
+            border: none;
+            cursor: pointer;
+            background-color: #eb4034;
+            color: white;
+            font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+                "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+            font-size: 1.4vmax;
+            transition: all 0.5s;
+        }
+
+        form>input[type="submit"]:hover {
+            background-color: #c4342a;
+        }
+    </style>
+</head>
+
+<body>
+    <form>
+        <h1>NAMASTE</h1>
+        <input placeholder="Enter Your Email" type="email" name="email" id="email" />
+        <input placeholder="Enter Your Password" type="password" name="password" id="password" />
+        <input id="submit" type="submit" value="Login" />
+        <a class="btn btn-primary" href="./signup.html" role="button">Signup</a>
+    </form>
+    <!-- <a href="../signup.html">New user</a> -->
+
+    <script>
+        const submit = document.getElementById('submit');
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const divData = document.getElementById('data');
+
+        submit.addEventListener('click', (event) => {
+            event.preventDefault();
+            console.log("Button Clicked");
+
+            const e = email.value;
+            const p = password.value;
+            const config = {
+                method: 'POST',
+                url: 'http://localhost:3000/login',
+                data: { Email: e, Password: p }
+            };
+            axios(config)
+                .then((res) => {
+                    console.log("POST response:");
+                    console.log(res.data);
+                })
+                .catch((error) => {
+                    divData.innerHTML += `<h4>All fields are required</h4>`
+                    console.log("POST error:", error);
+                });
+        })
+    </script>
+</body>
+
+</html>

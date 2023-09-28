@@ -17,9 +17,13 @@ db.sequelize.sync().then(() => {
 
 const controller = require('./controllers/user')
 
-app.post('/users', (req, res) => {
+app.post('/signup', (req, res) => {
     controller.createUser(req, res)
 });
+
+app.post('/login', (req, res) => {
+    controller.loginUser(req, res);
+})
 
 
 app.listen(3000);
