@@ -10,5 +10,6 @@ const sequelize = new Sequelize('new', 'root', 'Sql@123', {
 const db = {}
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
-db.users = require('../models/users')(sequelize, Sequelize);
+db.users = require('../models/loginModel')(sequelize, Sequelize);
+db.expanses = require('../models/expanseModel')(sequelize, Sequelize);
 module.exports = db;

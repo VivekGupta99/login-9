@@ -1,7 +1,6 @@
 const path = require("path")
 const db = require('../util/database')
 const bcrypt = require('bcrypt');
-const { response } = require("express");
 const User = db.users
 
 function isStringInvalid(string) {
@@ -20,6 +19,15 @@ function createUser(req, res, next) {
             message: "Bad Data"
         })
     }
+
+    User.findOne({ where: { Email } }).then(existingUser => {
+        if (existingUser) {
+            return res.status(409).send({
+                message: "Customer already exists"
+            });
+        }
+    })
+
     bcrypt.hash(Password, 10, (err, hash) => {
         console.log(err);
         User.create({ Name, Email, Password: hash }).then((data) => {
@@ -52,7 +60,9 @@ async function loginUser(req, res) {
                 }
                 //if passwords matched
                 if (response == true) {
+                    // return res.redirect('/exp')
                     return res.status(200).json({ success: true, message: "user logged-in successfully" });
+                    
                 } else {
                     return res.status(400).json({ success: false, message: "password is incorrect" });
                 }
@@ -65,8 +75,6 @@ async function loginUser(req, res) {
         console.log(error)
         res.status(501).json({ success: false, message: error })
     }
-
-
 }
 
 module.exports = { createUser, loginUser }

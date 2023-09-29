@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Expense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #expenseList {
+            margin-top: 20px;
+        }
+
+        #expenses {
+            list-style: none;
+            padding: 0;
+        }
+
+        #expenses li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-button {
+            background-color: #d71919;
+            /* Tomato red color */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-left: 10px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-button:hover {
+            background-color: #ff0000;
+            /* Darker red color on hover */
+        }
+
+        /* Positioning for expense items and delete buttons */
+        #expenses li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ensure that the delete button stays on the right side */
+        .delete-button-container {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Daily Expense Tracker</h1>
+        <form id="expenseForm">
+            <div class="form-group">
+                <label for="amount">Money Spent ($)</label>
+                <input type="number" id="amount" name="amount" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="Food">Food</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Salary">Salary</option>
+                    <!-- Add more categories as needed -->
+                </select>
+            </div>
+            <button type="submit">Add Expense</button>
+        </form>
+        <div id="expenseList">
+            <h2>Expense List</h2>
+            <ul id="expenses"></ul>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('expenseForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+
+            if (isNaN(amount)) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+
+            // You can send the data to your backend here for further processing and storage
+            // For now, let's just display the entered data
+            config = {
+                method: "POST",
+                url: 'http://localhost:3000/exp',
+                data: { amount, description, category }
+            }
+
+            axios(config).then((response) => {
+                console.log("POST Response: ", response.data);
+                addNewExpansetoUI(response.data);
+            }).catch(err => {
+                console.log("POST error: ", err);
+            })
+
+        });
+        axios.get('http://localhost:3000/exp').then(res => {
+            console.log(res.data)
+            res.data.forEach(element => {
+                addNewExpansetoUI(element);
+            });
+
+        }).then(err => console.log(err))
+
+        function addNewExpansetoUI(expanse) {
+            const expenseListItem = document.createElement('li');
+            expenseListItem.id = expanse.id;
+            expenseListItem.innerHTML = `
+                <div id="${expanse.id}">
+                    Amount: $${expanse.amount.toFixed(2)}, Description: ${expanse.description}, Category: ${expanse.category}
+                </div>
+                <div class="delete-button-container">
+                    <button class="delete-button" onclick="deleteExpense(${expanse.id})">Delete</button>
+                </div>
+            `;
+            document.getElementById('expenses').appendChild(expenseListItem);
+
+            // Clear the form
+            document.getElementById('expenseForm').reset();
+        }
+
+        function deleteExpense(expanseId) {
+            axios.delete(`http://localhost:3000/deleteExpanse/${expanseId}`)
+                .then(() => {
+                    removeExpansefromUI(expanseId);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        }
+        function removeExpansefromUI(expanseId) {
+            // const expanseElemId = `expanse.${expanseId}`
+            document.getElementById(expanseId).remove()
+        }
+
+    </script>
+</body>
+
+</html>
