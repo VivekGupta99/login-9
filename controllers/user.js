@@ -1,7 +1,13 @@
 const path = require("path")
 const db = require('../util/database')
 const bcrypt = require('bcrypt');
-const User = db.users
+const User = require("../models/users");
+const jwt = require('jsonwebtoken');
+// var cookieParser = require('cookie-parser');
+
+function generateAccessToken(id) {
+    return jwt.sign({ userId: id }, 'secratekey')
+}
 
 function isStringInvalid(string) {
     if (string == undefined || string.length === 0) {
@@ -61,8 +67,8 @@ async function loginUser(req, res) {
                 //if passwords matched
                 if (response == true) {
                     // return res.redirect('/exp')
-                    return res.status(200).json({ success: true, message: "user logged-in successfully" });
-                    
+                    return res.status(200).json({ success: true, message: "user logged-in successfully", token: generateAccessToken(user.id) });
+
                 } else {
                     return res.status(400).json({ success: false, message: "password is incorrect" });
                 }

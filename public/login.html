@@ -93,13 +93,15 @@
             const p = password.value;
             const config = {
                 method: 'POST',
-                url: 'http://localhost:3000/login',
+                url: 'http://localhost:3000/user/login',
                 data: { Email: e, Password: p }
             };
             axios(config)
                 .then((res) => {
+                    alert(res.data.message);
                     console.log("POST response:");
                     console.log(res.data);
+                    localStorage.setItem('token', res.data.token)
                     window.location.href = './expanse.html';
                 })
                 .catch((error) => {

@@ -1,8 +1,8 @@
-const expanseModel = require('../models/expanseModel');
+
 const db = require('../util/database');
 
 const path = require('path');
-const Expense = db.expanses
+const Expense = require('../models/expanseModel');
 
 async function creatingExpanse(req, res) {
     try {
@@ -18,7 +18,7 @@ async function creatingExpanse(req, res) {
         // }).catch((err) => {
         //     res.status(500).send(err);
         // })
-        const exp = await Expense.create({ amount, description, category })
+        const exp = await Expense.create({ amount, description, category, userId: req.user.id })
         if (exp) {
             res.status(200).send({ message: "Expense added" })
         } else {
@@ -30,18 +30,18 @@ async function creatingExpanse(req, res) {
 }
 
 async function gettingData(req, res) {
-    Expense.findAll().then((data) => {
-
-        res.status(200).send(data)
-    })
+    Expense.findAll({ where: { userId: req.user.id } })
+        .then((data) => {
+            res.status(200).send(data)
+        })
 }
 
 async function deleteExpanseData(req, res) {
     const expanseId = req.params.expanseId;
     if (expanseId == undefined || expanseId.length == 0) {
-        res.json({success : false, message: "didn't get the id"})
+        res.json({ success: false, message: "didn't get the id" })
     }
-    Expense.destroy({ where: { id: req.params.expanseId } })
+    Expense.destroy({ where: { id: expanseId, userId: req.user.id } })
         .then(() => {
             res.send("deleted")
         })

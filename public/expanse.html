@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Expense Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -115,12 +116,34 @@
             display: flex;
             align-items: center;
         }
+
+        #rzpbutton {
+            float: right;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        #rzpbutton:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>Daily Expense Tracker</h1>
+
+        <button id="rzpbutton">Buy Premium</button>
+        <div id="ispremium"></div>
+
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
         <form id="expenseForm">
             <div class="form-group">
                 <label for="amount">Money Spent ($)</label>
@@ -163,13 +186,19 @@
 
             // You can send the data to your backend here for further processing and storage
             // For now, let's just display the entered data
+            const token = localStorage.getItem('token');
             config = {
                 method: "POST",
-                url: 'http://localhost:3000/exp',
-                data: { amount, description, category }
+                url: 'http://localhost:3000/expanse/exp',
+
+                data: { amount, description, category },
+                headers: {
+                    'Authorization': token // Include the JWT token in the Authorization header
+                }
+
             }
 
-            axios(config).then((response) => {
+            axios(config,).then((response) => {
                 console.log("POST Response: ", response.data);
                 addNewExpansetoUI(response.data);
             }).catch(err => {
@@ -177,13 +206,17 @@
             })
 
         });
-        axios.get('http://localhost:3000/exp').then(res => {
-            console.log(res.data)
-            res.data.forEach(element => {
-                addNewExpansetoUI(element);
-            });
 
-        }).then(err => console.log(err))
+        const token = localStorage.getItem('token');
+        console.log("Token : ", token);
+        axios.get('http://localhost:3000/expanse/exp', { headers: { 'Authorization': token } })
+            .then(res => {
+                console.log(res.data)
+                res.data.forEach(element => {
+                    addNewExpansetoUI(element);
+                });
+            }).then(err => console.log(err))
+
 
         function addNewExpansetoUI(expanse) {
             const expenseListItem = document.createElement('li');
@@ -203,7 +236,7 @@
         }
 
         function deleteExpense(expanseId) {
-            axios.delete(`http://localhost:3000/deleteExpanse/${expanseId}`)
+            axios.delete(`http://localhost:3000/expanse/deleteExpanse/${expanseId}`, { headers: { 'Authorization': token } })
                 .then(() => {
                     removeExpansefromUI(expanseId);
                 })
@@ -215,6 +248,79 @@
             // const expanseElemId = `expanse.${expanseId}`
             document.getElementById(expanseId).remove()
         }
+
+        document.getElementById("rzpbutton").addEventListener("click", paymentProcess);
+
+        async function paymentProcess(e) {
+            try {
+                const token = localStorage.getItem("token");
+
+                const response = await axios.get("http://localhost:3000/purchase/purchasePremium", { headers: { "Authorization": token } });
+                console.log(response);
+
+                var options = {
+                    key: response.data.key_id,      // Enter the Key ID generated from the Dashboard
+                    order_id: response.data.order.id,       // For one time payment
+                    // This handler function will handle the success payment
+                    handler: async function (response) {
+                        const res = await axios.post(
+                            "http://localhost:3000/purchase/updateTransactionStatus/success",
+                            {
+                                order_id: options.order_id,
+                                payment_id: response.razorpay_payment_id,
+                            },
+                            { headers: { "Authorization": token } }
+                        );
+                        rzpbutton.remove();
+                        localStorage.setItem("token", res.data.token);
+
+                        let newhead = document.createElement("h3");
+                        newhead.textContent = "you are a premium user now";
+                        document.querySelector("#ispremium").appendChild(newhead);
+                        alert("you are a premium user now");
+                    },
+                };
+
+
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+                e.preventDefault();
+
+                rzp1.on('payment.failed', async function (response) {
+                    console.log(response);
+                    await axios.post(
+                        "http://localhost:3000/purchase/updatetransactionstatus/failed",
+                        {
+                            order_id: response.error.metadata.order_id,
+                            payment_id: response.error.metadata.payment_id,
+                        },
+                        { headers: { "Authorization": token } }
+                    );
+                    alert("something went wrong");
+                });
+            } catch (error) {
+                let errorDiv = document.createElement("div");
+                errorDiv.classList = "error";
+                errorDiv.textContent = error.response.data.message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 3000);
+            }
+        }
+        const newtoken = localStorage.getItem('token');
+        console.log("newToken:", newtoken)
+        axios.get('http://localhost:3000/expanse/exp', { headers: { 'Authorization': token } })
+                .then(res => {
+                    const isPremium = res.data.ispremiumuser; // Check the premium status
+                    if (isPremium) {
+                        // Display premium user message or update UI as needed
+                        let newhead = document.createElement("h3");
+                        newhead.textContent = "You are a premium user";
+                        document.querySelector("#ispremium").appendChild(newhead);
+                    }
+                })
+                .catch(err => console.log(err));
 
     </script>
 </body>

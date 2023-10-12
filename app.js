@@ -7,35 +7,40 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors())
 
-const db = require('./util/database')
+// const dotenv = require("dotenv");
+// dotenv.config();
 
-db.sequelize.sync().then(() => {
-    console.log("ok report")
-}).catch(() => {
-    console.log("error")
-})
+const sequelize = require("./util/database");
 
-const controller = require('./controllers/user')
-const expanseController = require('./controllers/expanse')
+const User = require("./models/users");
+const Expense = require("./models/expanseModel");
+const Order = require("./models/orders");
 
-app.post('/signup', (req, res) => {
-    controller.createUser(req, res)
+
+User.hasMany(Expense);
+Expense.belongsTo(User);
+
+User.hasMany(Order);
+Order.belongsTo(User);
+
+
+
+const userRoutes = require('./routes/userRoutes');
+const expanseRoutes = require('./routes/expanseRoutes');
+const purchaseRoutes = require('./routes/purchaseRoutes');
+
+
+sequelize.sync().then(() => {
+    console.log('ok report');
+}).catch((error) => {
+    console.error('Error syncing database:', error);
 });
 
-app.post('/login', (req, res) => {
-    controller.loginUser(req, res);
-})
 
-app.post("/exp", (req, res) => {
-    expanseController.creatingExpanse(req, res);
-});
+// Mount the routes
+app.use('/user', userRoutes); // Example base path for user-related routes
+app.use('/expanse', expanseRoutes); // Example base path for expanse-related routes
+app.use('/purchase', purchaseRoutes); // Example base path for purchase-related routes
 
-app.get('/exp', (req, res) => {
-    expanseController.gettingData(req, res);
-})  
-
-app.delete('/deleteExpanse/:expanseId', (req, res) => {
-    expanseController.deleteExpanseData(req, res);
-})
 
 app.listen(3000);
